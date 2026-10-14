@@ -29,6 +29,7 @@ from interview_helper.security.http import (
     get_oidc_userinfo_endpoint,
     OIDCUserInfo,
     TokenClaims,
+    TokenError,
 )
 from interview_helper.security.mock_auth import (
     is_mock_token,
@@ -123,6 +124,8 @@ def verify_jwt_token(
 ) -> TokenClaims:
     if MOCK_AUTH_ENABLED and is_mock_token(token):
         return mock_claims()
+    if MOCK_AUTH_ENABLED:
+        raise TokenError("Only the mock auth token is accepted in mock auth mode")
     return _oidc_verify_jwt_token(token, jwks_client, client_id, signing_algos)
 
 
