@@ -1,7 +1,7 @@
 import "@mantine/core/styles.css";
 
 import { MantineProvider, Container } from "@mantine/core";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "./lib/auth";
 import {
     BrowserRouter as Router,
     Routes,

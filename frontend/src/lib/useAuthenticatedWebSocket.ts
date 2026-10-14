@@ -10,7 +10,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import type { Envelope, Message } from "./message";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "./auth";
 
 type MessageType = Message["type"];
 type MessageMap = { [K in MessageType]: Extract<Message, { type: K }> };

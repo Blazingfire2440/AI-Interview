@@ -24,9 +24,16 @@ from interview_helper.context_manager.messages import (
     ErrorMessage,
 )
 from interview_helper.security.http import (
-    verify_jwt_token,
-    get_user_info_from_oidc_provider,
+    verify_jwt_token as _oidc_verify_jwt_token,
+    get_user_info_from_oidc_provider as _oidc_get_user_info,
     get_oidc_userinfo_endpoint,
+    OIDCUserInfo,
+    TokenClaims,
+)
+from interview_helper.security.mock_auth import (
+    is_mock_token,
+    mock_claims,
+    mock_user_info,
 )
 from interview_helper.security.tickets import TicketResponse
 from typing import Annotated
@@ -103,6 +110,30 @@ else:
     logger.info("Found azure speech key. Using Azure STT")
 
 
+MOCK_AUTH_ENABLED = settings.mock_auth and settings.environment.lower() == "development"
+if MOCK_AUTH_ENABLED:
+    logger.warning(
+        "MOCK_AUTH is ENABLED (development only): the mock test user token is accepted. "
+        "OIDC discovery is skipped."
+    )
+
+
+def verify_jwt_token(
+    token: str, jwks_client: jwt.PyJWKClient, client_id: str, signing_algos: str
+) -> TokenClaims:
+    if MOCK_AUTH_ENABLED and is_mock_token(token):
+        return mock_claims()
+    return _oidc_verify_jwt_token(token, jwks_client, client_id, signing_algos)
+
+
+async def get_user_info_from_oidc_provider(
+    token: str, userinfo_endpoint: str
+) -> OIDCUserInfo:
+    if MOCK_AUTH_ENABLED and is_mock_token(token):
+        return mock_user_info()
+    return await _oidc_get_user_info(token, userinfo_endpoint)
+
+
 session_manager = AppContextManager(
     audio_ingest_consumers=(
         async_audio_write_to_disk_consumer_pair,
@@ -112,8 +143,10 @@ session_manager = AppContextManager(
     settings=settings,
 )
 
-userinfo_endpoint: str = get_oidc_userinfo_endpoint(
-    session_manager.get_settings().oidc_authority
+userinfo_endpoint: str = (
+    ""
+    if MOCK_AUTH_ENABLED
+    else get_oidc_userinfo_endpoint(session_manager.get_settings().oidc_authority)
 )
 
 
@@ -157,12 +190,18 @@ SCOPE = "openid profile email"
 
 FRONTEND_REDIRECT_URI = session_manager.get_settings().frontend_redirect_uri
 
-oidc_config: dict[str, str] = httpx.get(OIDC_CONFIG_URL).raise_for_status().json()
-
-signing_algos: str = oidc_config.get("id_token_signing_alg_values_supported", "")
-jwks_client = jwt.PyJWKClient(oidc_config["jwks_uri"])
-AUTHORIZATION_ENDPOINT = oidc_config["authorization_endpoint"]
-TOKEN_ENDPOINT = oidc_config["token_endpoint"]
+if MOCK_AUTH_ENABLED:
+    oidc_config: dict[str, str] = {}
+    signing_algos: str = ""
+    jwks_client = jwt.PyJWKClient("http://mock-auth.invalid/jwks")
+    AUTHORIZATION_ENDPOINT = ""
+    TOKEN_ENDPOINT = ""
+else:
+    oidc_config = httpx.get(OIDC_CONFIG_URL).raise_for_status().json()
+    signing_algos = oidc_config.get("id_token_signing_alg_values_supported", "")
+    jwks_client = jwt.PyJWKClient(oidc_config["jwks_uri"])
+    AUTHORIZATION_ENDPOINT = oidc_config["authorization_endpoint"]
+    TOKEN_ENDPOINT = oidc_config["token_endpoint"]
 
 oidc_scheme = OpenIdConnect(openIdConnectUrl=OIDC_CONFIG_URL)
 

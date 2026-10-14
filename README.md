@@ -67,6 +67,15 @@ pnpm dev
 
 The frontend will be available at `https://localhost:5173` and the backend WebRTC server runs on the configured port.
 
+### Mock Authentication (development only)
+
+To skip OIDC and be logged in automatically as a stable test user (`Mock Test User`, sub `mock-auth|test-user`):
+
+- Backend `backend/.env`: `ENVIRONMENT=development` and `MOCK_AUTH=true` (OIDC variables become optional and OIDC discovery is skipped).
+- Frontend `frontend/.env`: `VITE_MOCK_AUTH=true`, then run `pnpm dev`.
+
+Limits: the backend refuses to start if `MOCK_AUTH=true` without `ENVIRONMENT=development` (`ENVIRONMENT` defaults to `production`); the frontend flag only works in `pnpm dev`, not in production builds. The mock token is only accepted by the backend when mock auth is enabled; with it disabled, normal OIDC is unchanged. The mock user is stored in the normal users table like any OIDC user.
+
 ## Other Tasks
 
 ### Structurizr

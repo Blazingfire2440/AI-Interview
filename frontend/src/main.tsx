@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import "normalize.css";
 import App from "./App.tsx";
-import { AuthProvider } from "react-oidc-context";
+import { AuthProvider } from "./lib/auth.tsx";
 import { OIDC_AUTHORITY, OIDC_CLIENT_ID, SITE_URL } from "./constants.ts";
 
 console.log("OIDC Config:", {

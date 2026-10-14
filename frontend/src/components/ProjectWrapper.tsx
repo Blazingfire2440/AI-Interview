@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "../lib/auth";
 import { Center, Loader, Text } from "@mantine/core";
 import { fetchProjects } from "../lib/api";
 import type { ProjectListing } from "../lib/api";

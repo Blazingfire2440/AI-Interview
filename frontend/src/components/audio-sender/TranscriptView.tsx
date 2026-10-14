@@ -13,7 +13,7 @@ import {
     ActionIcon,
 } from "@mantine/core";
 import { IconDownload } from "@tabler/icons-react";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "../../lib/auth";
 import {
     downloadTranscript,
     downloadQuestions,

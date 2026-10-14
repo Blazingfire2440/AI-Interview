@@ -18,9 +18,13 @@ class Settings(BaseSettings):
         default=[], alias="CORS_ALLOW_ORIGINS"
     )
 
-    # OIDC settings
-    oidc_authority: str = Field(alias="OIDC_AUTHORITY")
-    oidc_client_id: str = Field(alias="OIDC_CLIENT_ID")
+    # Runtime environment and development-only mock auth
+    environment: str = Field(default="production", alias="ENVIRONMENT")
+    mock_auth: bool = Field(default=False, alias="MOCK_AUTH")
+
+    # OIDC settings (optional only when mock auth is enabled)
+    oidc_authority: str = Field(default="", alias="OIDC_AUTHORITY")
+    oidc_client_id: str = Field(default="", alias="OIDC_CLIENT_ID")
     site_url: str = Field(default="http://localhost:3000", alias="SITE_URL")
     frontend_redirect_uri: str = Field(
         default="http://localhost:5173/auth/callback", alias="FRONTEND_REDIRECT_URI"
@@ -76,6 +80,21 @@ class Settings(BaseSettings):
     )
     LANGFUSE_PUBLIC_KEY: str | None = Field(alias="LANGFUSE_PUBLIC_KEY", default=None)
     LANGFUSE_BASE_URL: str | None = Field(alias="LANGFUSE_BASE_URL", default=None)
+
+    @model_validator(mode="after")
+    def check_auth_settings(self):
+        if self.mock_auth and self.environment.strip().lower() != "development":
+            raise ValueError(
+                "MOCK_AUTH=true is only allowed when ENVIRONMENT=development."
+            )
+        if not self.mock_auth:
+            for name, value in (
+                ("OIDC_AUTHORITY", self.oidc_authority),
+                ("OIDC_CLIENT_ID", self.oidc_client_id),
+            ):
+                if not value:
+                    raise ValueError(f"Missing required environment variable: {name}")
+        return self
 
     @model_validator(mode="after")
     def check_azure_fields_together(self):

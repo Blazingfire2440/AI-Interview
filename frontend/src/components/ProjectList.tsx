@@ -18,7 +18,7 @@ import {
 } from "@mantine/core";
 import { IconTrash, IconDots } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "../lib/auth";
 import {
     fetchProjects,
     createProject,

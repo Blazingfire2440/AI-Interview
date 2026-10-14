@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "./lib/auth";
 
 export default function AuthCallback() {
     const auth = useAuth();

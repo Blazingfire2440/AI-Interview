@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { AppShell, Group, Text, Avatar, Burger, Menu } from "@mantine/core";
 import { User } from "oidc-client-ts";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "./lib/auth";
 import { fetchProjects } from "./lib/api";
 import type { ProjectListing } from "./lib/api";
 
